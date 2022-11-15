@@ -59,5 +59,5 @@ The following example would provision a test database as specified in `~/repos/p
 
 For developer notes see [DEVELOPMENT.md](DEVELOPMENT.md).
 
-# Copyright Parker Institute for Cancer Immunotherapy, 2022
-## Licensing : This software is released under the Apache 2.0 License
+Copyright Parker Institute for Cancer Immunotherapy, 2022
+Licensing : This software is released under the Apache 2.0 License
