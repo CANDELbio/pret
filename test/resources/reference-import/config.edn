@@ -1,0 +1,136 @@
+;; Import Config:
+
+{:pret/import        {:user        "test-user"
+                      :mappings    "mappings.edn"
+                      :name "pici0002-import1"}
+ :dataset            {:name                  "pici0002"
+                      :description           "Open-label, Multicenter, Phase 1b/2 Clinical Study to Evaluate the Safety and Efficacy of CD40
+                                             Agonistic Monoclonal Antibody (APX005M) Administered Together with Gemcitabine and nab-Paclitaxel with or without
+                                             PD-1 Blocking Antibody (Nivolumab) in Patients with Previously Untreated Metastatic Pancreatic Adenocarcinoma"
+                      :assays                [{:name             "cfDNA"
+                                               :technology       :assay.technology/dPCR
+                                               :description      "cfDNA assay perfomred by E. Carpenter at UPenn"
+                                               :measurement-sets [{:name         "baseline"
+                                                                   :measurements [{:pret/input-file {:glob/directory "processed/"
+                                                                                                     :glob/pattern   "cfdna_measurements.*"}
+                                                                                   :pret/na         "NA"
+                                                                                   :pret/omit-if-na [*]
+                                                                                   :sample          "Originating ID (specimen barcode ID)"
+                                                                                   :vaf             "KRAS_vaf"
+                                                                                   :variant         "id"}]}]}
+                                              {:name             "THBSP2"
+                                               :technology       :assay.technology/ELISA
+                                               :description      "THBSP2 in plasma as measured by ELISA"
+                                               :measurement-sets [{:name         "baseline"
+                                                                   :measurements [{:pret/input-file   "processed/thbsp2_measurements.txt"
+                                                                                   :pret/na           "NA"
+                                                                                   :pret/omit-if-na   [:measurement/ng-mL]
+                                                                                   :sample            "Originating ID (specimen barcode ID)"
+                                                                                   :measurement/ng-mL "THBS-2 (ng/mL)"
+                                                                                   :measurement/cfdna-ng-mL "cfDNA (ng/mL)"
+                                                                                   :pret/constants    {:epitope "TSP2"}}]}]}
+                                              {:name             "CyTOF"
+                                               :technology       :assay.technology/mass-cytometry
+                                               :description      "CyTOF analysis performed at Primity Bio"
+                                               :measurement-sets [{:name             "Bendall"
+                                                                   :cell-populations [{:pret/input-file  "processed/cell_populations_Bendall.txt"
+                                                                                       :pret/na          "NA"
+                                                                                       :name             "name"
+                                                                                       :positive-markers "positive.epitopes"
+                                                                                       :cell-type        "cell.type"}]
+                                                                   :measurements     [{:pret/input-file "processed/cytof_measurements_Bendall.txt"
+                                                                                       :pret/na         "NA"
+                                                                                       :sample          "sample"
+                                                                                       :cell-population "uniquePopulationName"
+                                                                                       :pret/variable   "variable"
+                                                                                       :pret/value      "value"
+                                                                                       :pret/variables  {"eventCount"                :measurement/cell-count
+                                                                                                         "normalization.measurement" :measurement/leukocyte-count
+                                                                                                         "normalized.measurement"    :measurement/percent-of-leukocytes}}]}
+                                                                  {:name             "Spitzer"
+                                                                   :cell-populations [{:pret/input-file  "processed/cell_populations_Spitzer.txt"
+                                                                                       :pret/na          "NA"
+                                                                                       :name             "name"
+                                                                                       :positive-markers "positive.epitopes"
+                                                                                       :cell-type        "cell.type"}]
+                                                                   :measurements     [{:pret/input-file "processed/cytof_measurements_Spitzer.txt"
+                                                                                       :pret/na         "NA"
+                                                                                       :sample          "sample"
+                                                                                       :cell-population "uniquePopulationName"
+                                                                                       :pret/variable   "variable"
+                                                                                       :pret/value      "value"
+                                                                                       :pret/variables  {"eventCount"                :measurement/cell-count
+                                                                                                         "normalization.measurement" :measurement/leukocyte-count
+                                                                                                         "normalized.measurement"    :measurement/percent-of-leukocytes}}]}]}]
+                      :clinical-observation-sets [{:name "all-clinical-obs"
+                                                   :clinical-observations [{:pret/input-file "processed/clinical_observations_recist.txt"
+                                                                            :timepoint       "VISIT"
+                                                                            :subject         "USUBJID"
+                                                                            :recist          "RSORRES"}
+                                                                           {:pret/input-file "processed/subjects.txt"
+                                                                            :subject         "USUBJID"
+                                                                            :pret/constants  {:timepoint "screening"}}
+                                                                           {:pret/input-file "processed/tumor_assessments_measurements.txt"
+                                                                            :subject         "USUBJID"
+                                                                            :timepoint       "VISIT"
+                                                                            :pret/value      "TRORRES"
+                                                                            :pret/variable   "TRTESTCD"
+                                                                            :pret/variables  {"SUMDIAM" :clinical-observation/tumor-sum-diam
+                                                                                              "PCBSD"   :clinical-observation/tumor-sum-diam-perc-change}}]}]
+
+                      :samples               [{:pret/input-file "processed/samples.txt"
+                                               :id              "Originating ID (specimen barcode ID)"
+                                               :subject         "Participant ID"
+                                               :timepoint       "VISIT"
+                                               :specimen        "Source Matcode"
+                                               :container       "BioInventory Group Name"}
+                                              {:pret/input-file "original/vectra_samples_pds.txt"
+                                               :id              "specimenId"
+                                               :subject         "subjectId"
+                                               :pret/constants  {:timepoint "screening"}
+                                               :specimen        "specimen"}]
+                      :subjects              {:pret/input-file "processed/subjects.txt"
+                                              :id              "USUBJID"
+                                              :sex             "SEX"
+                                              :race            "RACE"
+                                              :ethnicity       "ETHNIC"
+                                              :therapies       {:pret/input-file   "processed/therapies.txt"
+                                                                :treatment-regimen "TRTACD"
+                                                                :order             "order"
+                                                                :pret/reverse      {:pret/rev-variable "USUBJID"
+                                                                                    :pret/rev-attr     :subject/therapies}}}
+                      :treatment-regimens    [{:pret/input-file "processed/treatment-regimens.txt"
+                                               :name            "id"}]
+                      :timepoints            [{:pret/input-file   "processed/timepoints.txt"
+                                               :pret/na           "NA"
+                                               :id                "id"
+                                               :treatment-regimen "regimen"
+                                               :cycle             "CYCLE"
+                                               :day               "DAY"
+                                               :relative-order    "ORDER"
+                                               :type              "TYPE"}
+                                              {:pret/input-file "processed/free_timepoints.txt"
+                                               :id              "id"
+                                               :type            "TYPE"}]}
+ :genomic-coordinate {:pret/input-file "processed/cfdna_variants_coordinates.txt"
+                      :contig          "contig"
+                      :start           "start"
+                      :end             "end"
+                      :id              "id"
+                      :strand          "strand"
+                      :pret/constants  {:assembly :assembly/GRCh38}}
+ :variant            {:pret/input-file "processed/cfdna_variants.txt"
+                      :gene            "gene"
+                      :id              "id"
+                      :coordinates     "coordinates"
+                      :ref-allele      "ref-allele"
+                      :alt-allele      "alt-allele"
+                      :HGVSc           "HGVSc"
+                      :HGVSp           "HGVSp"
+                      :dbSNP           "dbSNP"}
+ :cnv                {:pret/input-file "processed/cnv_ref_9999.tsv"
+                      :coordinates     "gc.id"
+                      :id              "gc.id"
+                      :pret/na         ""
+                      :genes           {:pret/many-delimiter ";"
+                                        :pret/many-variable  "Genes"}}}
