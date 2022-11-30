@@ -11,42 +11,32 @@
             [org.candelbio.pret.import :as import]
             [org.candelbio.pret.validation.post-import :as post-import]))
 
-(defn untar!
-  "Untars target file using CLI tar (`which tar` to find what will be used).
 
-  Note: similar to batch CLI untar, but no coordination around batch data directories."
-  [tar-file]
-  (let [par-dir (.getParent (io/file tar-file))
-        {:keys [exit out err]} (sh "tar" "xzvf" (.getName (io/file tar-file)) :dir par-dir)]
-    (when-not (zero? exit)
-      (throw (ex-info (str "tar execution did not run as expected: " err)
-                      {:std-err err
-                       :std-out out})))))
+(def template-dir "test/resources/reference-import/template-dataset")
 
-(def template-dir "test/resources/reference-import/template")
-(def template-file "test/resources/reference-import/template.tar.gz")
+(defn clone-template!
+  []
+  (sh "git" "clone" "git@github.com:CANDELbio/template-dataset.git"
+      :dir "test/resources/reference-import/"))
+
+(defn local-template []
+  (when-let [root-dir (System/getenv "CANDEL_TEST_DATA_DIR")]
+    (str root-dir "/template")))
 
 (defn ensure-template-dataset! []
-  (let [s3-bucket "cdel-db-ops"
-        s3-key "test/datasets/template.tar.gz"
-        s3-region :us-east-1
-        target-file template-file]
-    (try (aws/get-file s3-bucket s3-key target-file s3-region)
-         (catch Exception e
-           (binding [*out* *err*]
-             (println "ERROR: Test could not download template dataset for integration tests. PICI AWS creds are required!"))
-           (System/exit 1)))
-    (untar! target-file)
-    true))
+  (when-not (local-template)
+    (clone-template!)))
 
-(def import-cfg-file
-  "test/resources/reference-import/template/config.edn")
+(defn import-cfg-file []
+  (if-let [template-root (local-template)]
+    (str template-root "/config.edn")
+    "test/resources/reference-import/template-dataset/config.edn"))
 
 (def dataset-name
   (memoize
     (fn []
       (ensure-template-dataset!)
-      (-> import-cfg-file
+      (-> (import-cfg-file)
           (util.io/read-edn-file)
           (get-in [:dataset :name])))))
 
@@ -58,13 +48,15 @@
 (defn setup []
   (ensure-template-dataset!)
   (log/info "Initializing in-memory integration test db.")
-  (db/init datomic-uri))
+  (db/init datomic-uri)
+  ;; Temp fix for drug ordering issue with template dataset.
+  (let [conn (d/connect datomic-uri)]
+    @(d/transact conn [{:drug/preferred-name "PEMBROLIZUMAB"}])))
 
 (defn teardown []
   (log/info "Ending integration test and deleting db.")
   (d/delete-database datomic-uri)
-  (util.io/delete-recursively template-dir)
-  (io/delete-file template-file))
+  (util.io/delete-recursively template-dir))
 
 (deftest ^:integration sanity-test
   (try
@@ -72,7 +64,7 @@
     (let [import-result (import/run
                            {:target-dir tmp-dir
                             :datomic-uri datomic-uri
-                            :import-cfg-file import-cfg-file
+                            :import-cfg-file (import-cfg-file)
                             :disable-remote-calls true
                             :tx-batch-size 50})]
       (testing "Import runs to completion without throwing."

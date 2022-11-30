@@ -98,7 +98,7 @@
 
 (defn init
   "Loads all base schema, enums, and metamodel into database if necessary."
-  [datomic-uri & {:keys [skip-bootstrap seed-data-dir]}]
+  [datomic-uri & {:keys [skip-bootstrap seed-data-dir include-proprietary]}]
   (let [_ (d/create-database datomic-uri)
         _ (do
             (log/info "Database created."))
@@ -107,7 +107,9 @@
         _ (log/info "Connected to database")]
     (apply-schema datomic-uri)
     (when-not skip-bootstrap
-      (doseq [dataset (bootstrap.data/all-datasets)]
+      (doseq [dataset (if-not include-proprietary
+                        (bootstrap.data/open-datasets)
+                        (bootstrap.data/all-datasets))]
         (println "\nDataset: " dataset "\n")
         (if-not (fulfilled? (d/db conn) dataset)
           (let [{:keys [name]} dataset
