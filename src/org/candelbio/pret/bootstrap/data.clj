@@ -70,6 +70,16 @@
     :expected [[42]]
     :files ["all-nanostring-signatures-tx-data.edn"]}])
 
+(defn open-datasets
+  "Return only reference datasets that are available for use by the
+  general public without a license (non-proprietary datasets)"
+  []
+  (let [datasets (all-datasets)]
+    (remove
+      (fn [{:keys [name]}]
+        (#{:nanostring-signatures :drugs :diseases} name))
+      datasets)))
+
 (defn maybe-download
   "If seed data doesn't exist locally, will download it. Returns (as java.io.File objects),
    the seed data files which will then need to be transacted"
