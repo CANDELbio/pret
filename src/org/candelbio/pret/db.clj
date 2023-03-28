@@ -1,5 +1,5 @@
 (ns org.candelbio.pret.db
-  (:require [datomic.api :as d]
+  (:require [datomic.client.api :as d]
             [clojure.core.async :as a]
             [org.candelbio.pret.db.backend :as backend]
             [org.candelbio.pret.db.query :as dq]
@@ -27,16 +27,24 @@
 ;;
 
 
+;;; Only used by diff and validation?
+
+#_
 (defn get-connection [info]
-  (d/connect (:uri info)))
+  (backend/connect (:uri info)))
 
 (defn latest-db [info]
-  (d/db (get-connection info)))
+  (backend/db info))
+
+
+
+
+
 
 
 (defn exists? [datomic-uri]
   (try
-    (d/connect datomic-uri)
+    (backend/connect datomic-uri)
     true
     (catch RuntimeException e
       ;; since no ex-info on distributed Datomic, and only get RuntimeException,
@@ -70,13 +78,17 @@
      expected))
 
 
+(defn connect
+  [uri]
+  (backend/connect uri))
+
 (defn apply-schema [datomic-uri]
-  (let [conn (d/connect datomic-uri)
+  (let [conn (connect datomic-uri)
         schema-work schema/schema-txes]
     (doseq [raw-tx schema-work]
       ;; if a schema attr is not indexed, we add index true. this allows us to keep
       ;; schema edn in resources datomic impl agnostic while optimizing on-prem queries.
-      (let [tx (update-in raw-tx [:tx-data]
+      (let [tx raw-tx #_ (update-in raw-tx [:tx-data]
                           (fn [tx-data]
                             (mapv (fn [schema-ent]
                                     (if (and (:db/valueType schema-ent)
@@ -84,13 +96,17 @@
                                        (assoc schema-ent :db/index true)
                                        schema-ent))
                                  tx-data)))]
-        (if (tx-effect? conn tx)
+        (if true #_ (tx-effect? conn tx)
           (do (log/info ::schema (:name tx) " not in database, transacting.")
               (db.tx/sync+retry conn (:tx-data tx)))
           (log/info ::schema "Skipping schema install for: " (:name tx)))))))
 
+
+
+
+
 (defn version [datomic-uri]
-  (let [conn (d/connect datomic-uri)
+  (let [conn (connect datomic-uri)
         db (d/db conn)]
     (-> db
         (d/pull '[:candel.schema/version] :candel/schema)
@@ -99,13 +115,12 @@
 (defn init
   "Loads all base schema, enums, and metamodel into database if necessary."
   [datomic-uri & {:keys [skip-bootstrap seed-data-dir include-proprietary]}]
-  (let [_ (d/create-database datomic-uri)
-        _ (do
-            (log/info "Database created."))
+  (let [;; _ (backend/create-database datomic-uri) ;?? shoudln't this be done earlier
+        ;; _ (do (log/info "Database created."))
         ;; db isn't ready yet if it hasn't been created, this timeout seems sufficient
-        conn (d/connect datomic-uri)
+        conn (connect datomic-uri)
         _ (log/info "Connected to database")]
-    (apply-schema datomic-uri)
+cl    (apply-schema datomic-uri)
     (when-not skip-bootstrap
       (doseq [dataset (if-not include-proprietary
                         (bootstrap.data/open-datasets)
@@ -178,6 +193,12 @@
                    :where
                    [?e :import/txn-id ?id]] db txn-id))))
 
+(defn touch
+  [db id]
+  #_ (d/touch (d/entity db id))
+  nil)    ;TODO
+  
+
 (defn head
   "Returns metadata about the last transaction:
 
@@ -191,10 +212,10 @@
                   :where
                   [?tx :db/txInstant]]
                 db))
-        txn-data (d/touch (d/entity db (first txn)))
+        txn-data (touch (first txn))
         import-name (if (contains? txn-data :import/import)
-                      (-> (d/touch (d/entity db (-> (:import/import txn-data)
-                                                    :db/id)))
+                      (-> (touch db (-> (:import/import txn-data)
+                                                    :db/id))
                           :import/name)
                       (throw (ex-info "No datasets transacted"
                                       {:error :no-imports-on-database})))]
@@ -215,7 +236,7 @@
             db)
        (map
          (fn [[name tx-id]]
-           (let [tx (d/touch (d/entity db tx-id))]
+           (let [tx (touch db tx-id)]
              {:timestamp (:db/txInstant tx)
               :import-name name
               :ent-id tx-id})))

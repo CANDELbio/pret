@@ -5,7 +5,7 @@
             [clojure.tools.logging :as log]
             [org.candelbio.pret.db :as db]
             [org.candelbio.pret.db.schema :as db.schema]
-            [org.candelbio.pret.import.diff.tx-data :as diff]
+            #_ [org.candelbio.pret.import.diff.tx-data :as diff]
             [org.candelbio.pret.import.tx-data :as tx-data]
             [org.candelbio.pret.import.engine :as engine]
             [org.candelbio.pret.util.aws :as s3]
@@ -65,9 +65,11 @@
                                                      ;; linked to available processors, this is
                                                      ;; an io bound operation, isn't it?
                                                      ;; does this value even get respected?
+                                                     #_
                                                      (+ 2 (.. Runtime
                                                               getRuntime
                                                               availableProcessors))
+                                                     1
                                                      {:resume resume
                                                       :skip-annotations skip-annotations
                                                       :disable-remote-calls disable-remote-calls
@@ -82,6 +84,7 @@
       {:results (apply merge-with + (concat ref-results data-results))})))
 
 
+#_
 (defn perform-diff
   "Performs the update operation:
    1. prepared data is transacted to branch with temp dataset uids

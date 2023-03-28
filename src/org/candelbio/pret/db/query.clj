@@ -1,5 +1,5 @@
 (ns org.candelbio.pret.db.query
-  (:require [datomic.api :as d]))
+  (:require [datomic.client.api :as d]))
 
 (defn q+retry
   "Invoke Datomic query wrapped in retry with simple linear retry logic.

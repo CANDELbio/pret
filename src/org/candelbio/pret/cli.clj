@@ -42,7 +42,7 @@
         "                    Requires --database arg."
         "  prepare           Uses an import config file to generate all data needed to run an import."
         "                    Requires --import-config and --working-directory args."
-        "  diff              Generates all changes required to update an existing dataset to match the target."
+        #_ "  diff              Generates all changes required to update an existing dataset to match the target."
         "                    Requires --working-directory and --database arguments."
         "  transact          Transacts all data (as from prepare) for an import job into Datomic."
         "                    Requires --working-directory and --database arguments."
@@ -95,11 +95,11 @@
           (do
             (println "Error requesting database" database)
             (pprint result))
-          (let [db-info (db/fetch-info database)
-                uri (:uri db-info)]
-            (db/init uri)
-            (println "Request successful, created database" (:db-name result))))
+          (do 
+            (db/init database)
+            (println "Request successful, created database" database)))
         :success)
+      #_
       (catch Exception e
         (exit 1 (str "Error encountered creating candel database " database "\n"
                      (when-let [err-data (ex-data e)]
@@ -119,7 +119,7 @@
 (defn delete-db
   [{:keys [database]}]
   (if database
-    (let [result (candel/delete-db database)]
+    (let [result (candel/delete-db database)  (db/delete-db database)]
       (if (:success result)
         (println "Database " database " has been deleted.")
         (do
@@ -153,7 +153,7 @@
   [{:keys [target-dir resume database datomic-uri skip-annotations update] :as ctx}]
   (when-not (and datomic-uri database)
     (exit 1 "ERROR: Transact needs a database to transact to."))
-  (print-db-version datomic-uri)
+  #_ (print-db-version datomic-uri)
   (when resume
     (println (str "WARN: Resuming transaction job. This will skip transacting the import job entity. "
                   "Transactions may take awhile to restart as previously successful IDs are found.")))
@@ -168,6 +168,7 @@
                " transactions, entire import job at " target-dir))))
 
 
+#_
 (defn diff
   [{:keys [target-dir resume datomic-uri skip-annotations database] :as ctx}]
   (when-not (and datomic-uri database)
@@ -227,7 +228,7 @@
   {
    "request-db" request-db
    "prepare" prepare
-   "diff" diff
+   ;; "diff" diff
    "transact" transact
    "validate" validate
    "crosscheck-reference" crosscheck-reference
@@ -280,7 +281,7 @@
   [task database-name]
   (when-not (= task "request-db")
     (let [datomic-info (db/fetch-info database-name)
-          datomic-uri (:uri datomic-info)]
+          datomic-uri database-name #_ (:uri datomic-info)]
       (when-not datomic-uri
         (throw (ex-info (str "No such database: " database-name
                              "\nEither name is wrong, or database has been deleted due to inactivity.")
@@ -313,7 +314,7 @@
 
 
 (defn -main [& args]
-  (try
+  (do ; try
     (println "pret version:" (release/version))
     (let [argmap (validate-args args)
           {:keys [exit-message ok?]} argmap]
@@ -327,6 +328,7 @@
           (if (:errors task-results)
             (exit 1 (str "Task: " task " failed "))
             (exit 0 (str "Task: " task " completed."))))))
+    #_
     (catch Throwable t
       (cli.error-handling/report-and-exit t))))
 

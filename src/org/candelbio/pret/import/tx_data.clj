@@ -3,7 +3,8 @@
             [clojure.pprint :refer [pprint]]
             [clojure.edn :as edn]
             [clojure.walk :as w]
-            [datomic.api :as d]
+            [datomic.client.api :as d]
+            [org.candelbio.pret.db :as db]
             [org.candelbio.pret.db.metamodel :as metamodel]
             [clojure.tools.logging :as log]
             [clojure.java.io :as io]
@@ -269,7 +270,7 @@
                        (conventions/diff-dir target-dir)
                        target-dir)
         import-job-name (conventions/import-name target-dir)
-        conn (d/connect datomic-uri)
+        conn (db/connect datomic-uri)
         db (d/db conn)
         all-dataset-fnames (conventions/dataset-tx-data-filenames transact-dir)
         all-ref-fnames (if update

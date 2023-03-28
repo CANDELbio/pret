@@ -6,7 +6,7 @@
        transacted that contais the changes this namespace collects."
   (:require [clojure.data :as data]
             [clojure.pprint :refer [pprint]]
-            [datomic.api :as d]
+            [datomic.client.api :as d]
             [org.candelbio.pret.db.metamodel :as metamodel]
             [org.candelbio.pret.db :as db]
             [org.candelbio.pret.db.schema :as db.schema])
