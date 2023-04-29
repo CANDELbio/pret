@@ -120,7 +120,7 @@
         ;; db isn't ready yet if it hasn't been created, this timeout seems sufficient
         conn (connect datomic-uri)
         _ (log/info "Connected to database")]
-cl    (apply-schema datomic-uri)
+    (apply-schema datomic-uri)
     (when-not skip-bootstrap
       (doseq [dataset (if-not include-proprietary
                         (bootstrap.data/open-datasets)

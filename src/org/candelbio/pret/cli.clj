@@ -119,7 +119,7 @@
 (defn delete-db
   [{:keys [database]}]
   (if database
-    (let [result (candel/delete-db database)  (db/delete-db database)]
+    (let [result (candel/delete-db database)]
       (if (:success result)
         (println "Database " database " has been deleted.")
         (do
