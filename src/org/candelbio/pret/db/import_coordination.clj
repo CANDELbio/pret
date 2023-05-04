@@ -1,5 +1,5 @@
 (ns org.candelbio.pret.db.import-coordination
-  (:require [datomic.api :as d]
+  (:require [datomic.client.api :as d]
             [org.candelbio.pret.db.query :as dq]))
 
 (defn import-entity-txn-eid

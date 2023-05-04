@@ -2,7 +2,7 @@
   (:require [org.candelbio.pret.db.metamodel :as metamodel]
             [clojure.java.io :as io]
             [clojure.tools.logging :as log]
-            [datomic.api :as d]
+            [datomic.client.api :as d]
             [org.candelbio.pret.db.schema :as db.schema]
             [clojure.edn :as edn]
             [org.candelbio.pret.db.query :as dq]))

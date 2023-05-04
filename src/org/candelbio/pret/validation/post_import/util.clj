@@ -6,7 +6,7 @@
             [clojure.spec-alpha2 :as s]
             [clojure.walk :as walk]
             [org.candelbio.pret.validation.specs :as specs]
-            [datomic.api :as d]
+            [datomic.client.api :as d]
             [org.candelbio.pret.db :as db]
             [org.candelbio.pret.validation.post-import.query :as vquery]
             [org.candelbio.pret.db.schema :as db.schema]))

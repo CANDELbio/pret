@@ -1,5 +1,5 @@
 (ns org.candelbio.pret.db.transact
-  (:require [datomic.api :as d]
+  (:require [datomic.client.api :as d]
             [clojure.pprint :refer [pprint]]
             [org.candelbio.pret.db.query :as db.query]
             [clojure.edn :as edn]
@@ -17,7 +17,7 @@
   "print errors when/if they happen - this can be improved with additional chrome"
   [f]
   (let [res (try
-              @(f)
+              (f)
               (catch Exception e
                 (let [data (ex-data e)]
                   ;; Some exceptions contain an anomaly via info
@@ -29,6 +29,13 @@
                      ::anom/message (.getMessage e)
                      ::anom/ex-data (ex-data e)}))))]
     res))
+
+;;; Or, not! (for debuggability)
+#_
+(defn report-retryable
+  "print errors when/if they happen - this can be improved with additional chrome"
+  [f]
+  (f))
 
 ;; retry functions all here for convenience
 (defn exp-retry-fn
@@ -59,7 +66,7 @@
           (log/info "retry> retrying result: " result)
           (if (<= n max-retries)
             (do
-              (Thread/sleep (next-try-fn n backoff))
+              (Thread/sleep (int (next-try-fn n backoff)))
               (log/info "retry> attempt " n)
               (if-let [skip-result (skip-fn)]
                 skip-result
@@ -71,7 +78,9 @@
 
 (defn- raw-tx-fn
   [conn data]
-  (d/transact-async conn data))
+  #_ (d/transact-async conn data)
+  (d/transact conn {:tx-data data})
+  )
 
 (defn- tx-present?
   "Returns `nil` (falsy) if tx not present in db, otherwise map with info
@@ -121,7 +130,8 @@
                    3600
                    3000
                    ;;linear-retry-fn
-                   scaled-retry-fn)]
+                   #_ scaled-retry-fn
+                   exp-retry-fn)]
 
       (if-not (::anom/category res)
         res
@@ -294,7 +304,8 @@
   for tempo-msec, up to max-retries."
   ([conn tx tempo-msec max-retries]
    (loop [retry 1]
-     (let [tx-result @(d/transact conn tx)]
+     ;; Where the action is!
+     (let [tx-result (d/transact conn {:tx-data tx})]
        (cond
          ;; if transaction succeeds, return result as normal
          (:db-after tx-result)

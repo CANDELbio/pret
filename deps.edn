@@ -2,8 +2,10 @@
         com.cognitect/anomalies {:mvn/version "0.1.12"}
         com.cognitect.aws/endpoints {:mvn/version "1.1.11.969"}
         com.cognitect.aws/sns       {:mvn/version "697.2.391.0"}
-        com.datomic/datomic-pro {:mvn/version "1.0.6316"
-                                 :exclusions [org.slf4j/jul-to-slf4j org.slf4j/slf4j-nop]}
+        #_ com.datomic/datomic-pro #_ {:mvn/version "1.0.6316"
+                                       :exclusions [org.slf4j/jul-to-slf4j org.slf4j/slf4j-nop]}
+        com.datomic/client-cloud {:mvn/version "1.0.122"}
+
         com.cognitect.aws/api       {:mvn/version "0.8.505"}
         com.cognitect.aws/s3        {:mvn/version "811.2.858.0"}
         org.clojure/data.csv {:mvn/version "1.0.0"}

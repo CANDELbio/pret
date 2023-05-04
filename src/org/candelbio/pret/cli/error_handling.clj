@@ -4,10 +4,14 @@
   (:import (java.util.concurrent ExecutionException)))
 
 
+#_
 (defn exit [code msg]
   (println msg)
   (shutdown-agents)
   (System/exit code))
+
+(defn exit [code msg]
+  (println :exiting-not code msg))
 
 (defn report-errors
   "For each key and value in ex-info, report error state."

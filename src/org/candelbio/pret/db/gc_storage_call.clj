@@ -2,6 +2,9 @@
   (:require [datomic.api :as d]
             [org.candelbio.pret.db.config :as config]))
 
+;;; Note: won't work in Datomic Cloud environment
+
+
 (def db-list
   (d/get-database-names (str (config/base-uri) '*)))
 

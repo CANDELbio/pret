@@ -25,7 +25,7 @@
   (wrap-config
     "CANDEL_REFERENCE_DATA_BUCKET"
     "candel.referenceDataBucket"
-    "pret-processed-reference-data-prod"))
+    "pici-pret-processed-reference-data-prod-right")) ;mt: this is where it actually is
 
 (def matrix-bucket
   (wrap-config
